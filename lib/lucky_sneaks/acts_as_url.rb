@@ -73,8 +73,15 @@ module LuckySneaks
         conditions << id
       end
       if self.class.scope_for_url
-        conditions.first << " and #{self.class.scope_for_url} = ?"
-        conditions << send(self.class.scope_for_url)
+        if self.class.scope_for_url.is_a?(Array)
+          self.class.scope_for_url.each do |x|
+            conditions.first << " and #{x} = ?"
+            conditions << send(x)
+          end
+        else 
+          conditions.first << " and #{self.class.scope_for_url} = ?"
+          conditions << send(self.class.scope_for_url)
+        end
       end
       url_owners = self.class.find(:all, :conditions => conditions)
       write_attribute url_attribute, base_url

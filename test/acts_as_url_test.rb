@@ -29,6 +29,10 @@ ActiveRecord::Schema.define(:version => 1) do
     t.string :title, :url, :other
   end
   
+  create_table :multimocuments, :force => true do |t|
+    t.string :title, :url, :other, :another
+  end
+  
   create_table :permuments, :force => true do |t|
     t.string :title, :permalink, :other
   end
@@ -57,6 +61,10 @@ end
 
 class Mocument < ActiveRecord::Base
   acts_as_url :title, :scope => :other, :sync_url => true
+end
+
+class Multimocument < ActiveRecord::Base
+  acts_as_url :title, :scope => [:other, :another], :sync_url => true
 end
 
 class Permument < ActiveRecord::Base
@@ -131,9 +139,23 @@ class ActsAsUrlTest < Test::Unit::TestCase
     assert_equal @moc.url, @other_moc.url
   end
   
+  def test_should_multiple_scope_uniqueness
+    @moc = Multimocument.create!(:title => "Multimocumentary", :other => "other", :another => "another")
+    @other_moc = Multimocument.create!(:title => "Multimocumentary", :other => "other")
+    assert_equal @moc.url, @other_moc.url
+    @another_moc = Multimocument.create!(:title => "Multimocumentary", :another => "another")
+    assert_equal @moc.url, @another_moc.url
+  end
+  
   def test_should_still_create_unique_if_in_same_scope
     @moc = Mocument.create!(:title => "Mocumentary", :other => "Suddenly, I care if I'm unique")
     @other_moc = Mocument.create!(:title => "Mocumentary", :other => "Suddenly, I care if I'm unique")
+    assert_not_equal @moc.url, @other_moc.url
+  end
+  
+  def test_should_still_create_unique_if_in_same_multiple_scope
+    @moc = Multimocument.create!(:title => "Mocumentary", :other => "other", :another => "another")
+    @other_moc = Multimocument.create!(:title => "Mocumentary", :other => "other", :another => "another")
     assert_not_equal @moc.url, @other_moc.url
   end
   
